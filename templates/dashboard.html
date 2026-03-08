@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Internship Tracker</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: #f8f7f4; color: #1a1a2a; min-height: 100vh; }
+
+    header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; background: #1a1a2a; border-bottom: 1px solid #2a2a3a; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 700; color: white; letter-spacing: -0.5px; }
+    header h1 span { color: #f97316; }
+    header .header-right { display: flex; align-items: center; gap: 16px; }
+    header .app-badge { background: #f97316; color: white; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; letter-spacing: 0.5px; }
+    header .count { color: #888; font-size: 0.8rem; }
+
+    .stats { display: flex; gap: 12px; padding: 24px 40px; }
+    .stat { background: white; border: 1px solid #e8e4de; border-radius: 14px; padding: 18px 24px; text-align: center; flex: 1; box-shadow: 0 1px 4px rgba(0,0,0,0.05); transition: transform 0.15s; }
+    .stat:hover { transform: translateY(-2px); }
+    .stat .num { font-size: 2rem; font-weight: 800; font-family: 'Space Grotesk', sans-serif; }
+    .stat:nth-child(1) .num { color: #1a1a2a; }
+    .stat:nth-child(2) .num { color: #f97316; }
+    .stat:nth-child(3) .num { color: #8b5cf6; }
+    .stat:nth-child(4) .num { color: #10b981; }
+    .stat:nth-child(5) .num { color: #ef4444; }
+    .stat .label { font-size: 0.72rem; color: #888; margin-top: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .section { padding: 0 40px 32px; }
+    .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 0.85rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+
+    .board { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+    .column { background: white; border: 1px solid #e8e4de; border-radius: 14px; min-width: 200px; width: 200px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+    .column h3 { font-family: 'Space Grotesk', sans-serif; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }    .card:hover { border-color: #f97316; box-shadow: 0 0 0 3px rgba(249,115,22,0.1); transform: translateY(-1px); }
+    .card .company { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.88rem; color: #1a1a2a; }
+    .card .role { font-size: 0.73rem; color: #888; margin-top: 2px; }
+    .card .date { font-size: 0.68rem; color: #bbb; margin-top: 6px; }
+    .card .actions { display: flex; gap: 6px; margin-top: 8px; }
+    .card select { background: white; color: #1a1a2a; border: 1px solid #e8e4de; border-radius: 6px; font-size: 0.68rem; padding: 2px 4px; cursor: pointer; }
+    .card button { background: #fee2e2; color: #ef4444; border: none; border-radius: 6px; font-size: 0.68rem; padding: 2px 8px; cursor: pointer; font-weight: 600; }
+
+    .add-form { background: white; border: 1px solid #e8e4de; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+    .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    input, textarea, select { background: #f8f7f4; color: #1a1a2a; border: 1px solid #e8e4de; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem; width: 100%; font-family: 'DM Sans', sans-serif; transition: border-color 0.15s, box-shadow 0.15s; }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: #f97316; box-shadow: 0 0 0 3px rgba(249,115,22,0.12); }
+    .form-group { flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 0.72rem; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+    .btn { background: #1a1a2a; color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 12px; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
+    .btn:hover { background: #2a2a3a; }
+    .btn.secondary { background: white; border: 1px solid #e8e4de; color: #1a1a2a; }
+    .btn.secondary:hover { background: #f8f7f4; border-color: #ccc; }
+    .btn.orange { background: #f97316; color: white; }
+    .btn.orange:hover { background: #ea6c0a; }
+
+    .ai-section { background: white; border: 1px solid #e8e4de; border-radius: 16px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+    .ai-buttons { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .ai-btn { background: #1a1a2a; color: white; border: none; border-radius: 8px; padding: 10px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
+    .ai-btn:hover { background: #f97316; }
+    textarea { font-family: 'DM Sans', sans-serif; resize: vertical; }
+
+    .ai-output { background: #f8f7f4; border: 1px solid #e8e4de; border-radius: 12px; padding: 24px; margin-top: 16px; min-height: 100px; color: #1a1a2a; }
+    .ai-output h1, .ai-output h2 { font-family: 'Space Grotesk', sans-serif; color: #f97316; margin: 20px 0 10px; font-size: 1.05rem; border-bottom: 2px solid #e8e4de; padding-bottom: 6px; }
+    .ai-output h3 { font-family: 'Space Grotesk', sans-serif; color: #1a1a2a; margin: 16px 0 8px; font-size: 0.95rem; }
+    .ai-output p { line-height: 1.8; margin-bottom: 12px; font-size: 0.9rem; }
+    .ai-output ul, .ai-output ol { padding-left: 20px; margin-bottom: 12px; }
+    .ai-output li { line-height: 1.8; font-size: 0.9rem; margin-bottom: 4px; }
+    .ai-output strong { color: #f97316; font-weight: 600; }
+    .ai-output hr { border: none; border-top: 2px solid #e8e4de; margin: 20px 0; }
+    .ai-output .score-badge { display: inline-block; background: #1a1a2a; color: white; font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 800; padding: 8px 20px; border-radius: 999px; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>🎯 Internship <span>Tracker</span></h1>
+    <div class="header-right">
+        <span class="app-badge">BETA</span>
+        <span class="count">{{ jobs|length }} applications tracked</span>
+    </div>
+</header>
+
+<div style="background: #f97316; color: white; text-align: center; padding: 8px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.3px;">
+    🎭 Demo Mode — Sample data shown for demonstration purposes
+</div>
+
+<!-- STATS -->
+<div class="stats">
+    <div class="stat"><div class="num">{{ jobs|length }}</div><div class="label">Total</div></div>
+    <div class="stat"><div class="num">{{ jobs|selectattr('stage', 'ne', 'Saved')|list|length }}</div><div class="label">Applied</div></div>
+    <div class="stat"><div class="num">{{ jobs|selectattr('stage', 'eq', 'Interview')|list|length }}</div><div class="label">Interviews</div></div>
+    <div class="stat"><div class="num">{{ jobs|selectattr('stage', 'eq', 'Offer')|list|length }}</div><div class="label">Offers</div></div>
+    <div class="stat"><div class="num">{{ jobs|selectattr('stage', 'eq', 'Rejected')|list|length }}</div><div class="label">Rejected</div></div>
+</div>
+
+<!-- KANBAN BOARD -->
+<div class="section">
+    <h2 class="section-title">Application Board</h2>
+    <div class="board">
+        {% set stage_colors = {'Saved': '#aaa', 'Applied': '#f97316', 'Phone Screen': '#8b5cf6', 'Interview': '#8b5cf6', 'Offer': '#10b981', 'Rejected': '#ef4444'} %}
+        {% for stage in stages %}
+        <div class="column">
+            <h3 style="color: {{ stage_colors.get(stage, '#aaa') }};">{{ stage }}</h3>
+            {% for job in jobs if job.stage == stage %}
+            <div class="card" style="border-left: 4px solid {{ stage_colors.get(job.stage, '#e8e4de') }};">
+                <div class="company">{{ job.company }}</div>
+                <div class="role">{{ job.role }}</div>
+                {% if job.date_applied %}<div class="date">{{ job.date_applied }}</div>{% endif %}
+                <div class="actions">
+                    <select onchange="updateStage({{ job.id }}, this.value)">
+                        {% for s in stages %}
+                        <option value="{{ s }}" {% if s == job.stage %}selected{% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                    <form method="POST" action="/delete/{{ job.id }}" style="margin:0">
+                        <button type="submit">✕</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ADD JOB FORM -->
+<div class="section">
+    <div class="add-form">
+        <h2>+ Add Application</h2>
+        <form method="POST" action="/add">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Company</label>
+                    <input name="company" placeholder="e.g. Google" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <input name="role" placeholder="e.g. SWE Intern" required>
+                </div>
+                <div class="form-group">
+                    <label>Stage</label>
+                    <select name="stage">
+                        {% for s in stages %}
+                        <option value="{{ s }}">{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date Applied</label>
+                    <input name="date_applied" type="date">
+                </div>
+            </div>
+            <div class="form-group" style="margin-top:12px">
+                <label>Job Description (paste for AI match scoring)</label>
+                <textarea name="job_description" rows="3" placeholder="Paste the job description here..."></textarea>
+            </div>
+            <div class="form-group" style="margin-top:12px">
+                <label>Notes</label>
+                <textarea name="notes" rows="2" placeholder="Any notes..."></textarea>
+            </div>
+            <button class="btn" type="submit">Add Job</button>
+        </form>
+    </div>
+</div>
+
+<!-- AI SECTION -->
+<div class="section">
+    <div class="ai-section">
+        <h2>🤖 AI Tools</h2>
+
+        <div class="form-group" style="margin-bottom:16px">
+            <label>Your Resume</label>
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px">
+                <input type="file" id="resume-file" accept=".pdf,.docx,.txt" style="width:auto; cursor:pointer;">
+                <button class="btn secondary" type="button" onclick="uploadResume()" style="margin-top:0">Upload</button>
+                <span id="upload-status" style="font-size:0.75rem; color:#10b981;"></span>
+            </div>
+            <textarea id="resume-text" rows="8" placeholder="Or paste your resume here..."></textarea>
+        </div>
+
+        <div class="form-group" style="margin-bottom:16px">
+            <label>Job Description (for match scoring)</label>
+            <textarea id="jd-text" rows="4" placeholder="Paste a job description to score your resume against..."></textarea>
+        </div>
+
+        <div class="ai-buttons">
+            <button class="ai-btn" onclick="improveResume()">✨ Improve My Resume</button>
+            <button class="ai-btn" onclick="matchScore()">📊 Score Resume vs JD</button>
+            <button class="ai-btn" onclick="tailorResume()">🎯 Tailor Resume to JD</button>
+            <button class="btn secondary" onclick="saveResume()">💾 Save Resume</button>
+        </div>
+
+        <div id="ai-output" class="ai-output" style="display:none"></div>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button class="btn secondary" id="copy-btn" onclick="copyToEditor()" style="display:none;">📋 Copy to Resume Editor</button>
+            <button class="btn secondary" id="export-btn" onclick="exportToPDF()" style="display:none;">📄 Export as PDF</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function updateStage(jobId, stage) {
+        await fetch(`/update_stage/${jobId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stage })
+        });
+        location.reload();
+    }
+
+    function renderOutput(text) {
+        const el = document.getElementById('ai-output');
+        el.style.display = 'block';
+        document.getElementById('export-btn').style.display = 'inline-block';
+        document.getElementById('copy-btn').style.display = 'inline-block';
+        el.innerHTML = marked.parse(text);
+        el.innerHTML = el.innerHTML.replace(/(\d{1,3}\/100)/g, '<span class="score-badge">$1</span>');
+    }
+
+    async function improveResume() {
+        const resume = document.getElementById('resume-text').value;
+        if (!resume.trim()) return alert('Please upload your resume first.');
+        const el = document.getElementById('ai-output');
+        el.style.display = 'block';
+        el.innerHTML = '<p style="color: hsl(20 10% 48%); font-style: italic;">✨ Improving your resume...</p>';
+        try {
+            const res = await fetch('/ai/improve_resume', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resume })
+            });
+            if (!res.ok) { el.innerHTML = '<p style="color:red">Error: ' + res.status + '</p>'; return; }
+            let fullText = '';
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                fullText += decoder.decode(value);
+                el.innerHTML = marked.parse(fullText);
+            }
+            renderOutput(fullText);
+        } catch (err) {
+            el.innerHTML = '<p style="color:red">Error: ' + err.message + '</p>';
+        }
+    }
+
+    async function matchScore() {
+        const resume = document.getElementById('resume-text').value;
+        const jd = document.getElementById('jd-text').value;
+        if (!resume.trim()) return alert('Please upload your resume first.');
+        if (!jd.trim()) return alert('Please paste a job description first.');
+        const el = document.getElementById('ai-output');
+        el.style.display = 'block';
+        el.innerHTML = '<p style="color: hsl(20 10% 48%); font-style: italic;">📊 Scoring your resume...</p>';
+        try {
+            const res = await fetch('/ai/match_score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resume, job_description: jd })
+            });
+            if (!res.ok) { el.innerHTML = '<p style="color:red">Error: ' + res.status + ' - ' + await res.text() + '</p>'; return; }
+            let fullText = '';
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                fullText += decoder.decode(value);
+                el.innerHTML = marked.parse(fullText);
+            }
+            renderOutput(fullText);
+        } catch (err) {
+            el.innerHTML = '<p style="color:red">Error: ' + err.message + '</p>';
+        }
+    }
+
+    async function tailorResume() {
+        const resume = document.getElementById('resume-text').value;
+        const jd = document.getElementById('jd-text').value;
+        if (!resume.trim()) return alert('Please upload your resume first.');
+        if (!jd.trim()) return alert('Please paste a job description first.');
+        const el = document.getElementById('ai-output');
+        el.style.display = 'block';
+        el.innerHTML = '<p style="color: hsl(20 10% 48%); font-style: italic;">🎯 Tailoring your resume...</p>';
+        let tailoredResume = '';
+        try {
+            const tailorRes = await fetch('/ai/tailor_resume', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resume, job_description: jd })
+            });
+            const tailorReader = tailorRes.body.getReader();
+            const decoder = new TextDecoder();
+            while (true) {
+                const { done, value } = await tailorReader.read();
+                if (done) break;
+                tailoredResume += decoder.decode(value);
+                el.innerHTML = marked.parse('🎯 **Tailoring your resume...**\n\n' + tailoredResume);
+            }
+            el.innerHTML += '<p style="color: hsl(20 10% 48%); font-style: italic; margin-top:16px;">⏳ Scoring your tailored resume...</p>';
+            const scoreRes = await fetch('/ai/match_score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resume: tailoredResume, job_description: jd })
+            });
+            const scoreReader = scoreRes.body.getReader();
+            let score = '';
+            while (true) {
+                const { done, value } = await scoreReader.read();
+                if (done) break;
+                score += decoder.decode(value);
+            }
+            renderOutput('## 📊 Match Score\n\n' + score + '\n\n---\n\n## 🎯 Tailored Resume\n\n' + tailoredResume);
+        } catch (err) {
+            el.innerHTML = '<p style="color:red">Error: ' + err.message + '</p>';
+        }
+    }
+
+    async function saveResume() {
+        const content = document.getElementById('resume-text').value;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/save_resume';
+        const input = document.createElement('input');
+        input.name = 'content';
+        input.value = content;
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    async function uploadResume() {
+        const fileInput = document.getElementById('resume-file');
+        const status = document.getElementById('upload-status');
+        if (!fileInput.files[0]) return alert('Please select a file first.');
+        status.textContent = 'Uploading...';
+        const formData = new FormData();
+        formData.append('resume_file', fileInput.files[0]);
+        const res = await fetch('/upload_resume', { method: 'POST', body: formData });
+        const data = await res.json();
+        document.getElementById('resume-text').value = data.text;
+        status.textContent = '✓ Resume loaded!';
+    }
+
+    function copyToEditor() {
+    const fullOutput = document.getElementById('ai-output').innerText;
+    // Only grab content after "Tailored Resume" if it exists, otherwise use full output
+    const tailorIndex = fullOutput.indexOf('🎯 Tailored Resume');
+    const output = tailorIndex !== -1 ? fullOutput.substring(tailorIndex + '🎯 Tailored Resume'.length).trim() : fullOutput;        document.getElementById('resume-text').value = output;
+        document.getElementById('copy-btn').textContent = '✓ Copied to Editor!';
+        setTimeout(() => {
+            document.getElementById('copy-btn').textContent = '📋 Copy to Resume Editor';
+        }, 2000);
+        window.scrollTo({ top: document.getElementById('resume-text').offsetTop - 20, behavior: 'smooth' });
+    }
+
+    function exportToPDF() {
+       const fullOutput = document.getElementById('ai-output').innerText;
+        const tailorIndex = fullOutput.indexOf('Tailored Resume');
+        const output = tailorIndex !== -1 ? fullOutput.substring(tailorIndex + 'Tailored Resume'.length).trim() : fullOutput;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html><html><head><title>Resume</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: 'Times New Roman', serif; font-size: 11pt; color: #000; max-width: 700px; margin: 0 auto; padding: 40px; line-height: 1.4; }
+                .name { text-align: center; font-size: 20pt; font-weight: bold; margin-bottom: 4px; }
+                .contact { text-align: center; font-size: 10pt; margin-bottom: 16px; }
+                .section-header { font-size: 11pt; font-weight: bold; text-transform: uppercase; border-bottom: 1.5px solid black; margin: 14px 0 6px; padding-bottom: 2px; }
+                .job-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 11pt; margin-top: 8px; }
+                .job-title { font-style: italic; font-weight: normal; margin-bottom: 4px; }
+                ul { padding-left: 20px; margin: 4px 0; }
+                li { margin-bottom: 3px; font-size: 10.5pt; }
+                p { font-size: 10.5pt; margin-bottom: 4px; }
+                @media print { body { padding: 20px; } }
+                          </style></head>
+            <body>
+            <div class="name">Your Name</div>
+            <div class="contact">Your City, State Zip | (123) 456-7890 | your.email@gmail.com | www.linkedin.com
+            <div id="content"></div>
+            <script>
+                const raw = ${JSON.stringify(output)};
+                const lines = raw.split('\\n').filter(l => l.trim());
+                let html = '';
+                const sectionHeaders = ['EDUCATION', 'WORK EXPERIENCE', 'LEADERSHIP', 'SKILLS', 'COURSEWORK', 'INVOLVEMENT', 'PROJECTS'];
+                lines.forEach(line => {
+                    line = line.trim();
+                    if (!line) return;
+                    if (line.includes('your.email@gmail.com') || line.includes('Your City, State Zip') || line === 'Your Name') return;
+                    if (sectionHeaders.some(h => line.trim().toUpperCase() === h || line.trim().toUpperCase().startsWith(h + ' '))) {                        html += '<div class="section-header">' + line + '</div>';
+                    } else if (line.startsWith('●') || line.startsWith('•') || line.startsWith('-')) {
+                        html += '<ul><li>' + line.replace(/^[●•-]\\s*/, '') + '</li></ul>';
+                    } else if (line.match(/\\d{4}/)) {
+                        const parts = line.split('|');
+                        if (parts.length >= 2) {
+                            const dateMatch = line.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|June|July|August|September|October|November|December|Present).+/);
+                            const date = dateMatch ? dateMatch[0] : '';
+                            const company = line.replace(date, '').replace(/\\|?\\s*$/, '').trim();
+                            html += '<div class="job-row"><span>' + company + '</span><span>' + date + '</span></div>';
+                        } else { html += '<p>' + line + '</p>'; }
+                    } else if (line.length < 50 && !line.includes(':')) {
+                        html += '<div class="job-title">' + line + '</div>';
+                    } else { html += '<p>' + line + '</p>'; }
+                });
+                document.getElementById('content').innerHTML = html;
+            <\/script>
+            </body></html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => printWindow.print(), 800);
+    }
+</script>
+
+</body>
+</html>
