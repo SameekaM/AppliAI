@@ -3,5 +3,5 @@ flask-sqlalchemy
 anthropic
 gunicorn
 werkzeug
-PyMuPDF
+pdfplumber
 python-docx
