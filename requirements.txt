@@ -5,3 +5,4 @@ gunicorn
 werkzeug
 pdfplumber
 python-docx
+docx2txt
